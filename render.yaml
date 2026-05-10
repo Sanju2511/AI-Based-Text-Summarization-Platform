@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: ai-text-summarization-platform
+    env: python
+    plan: free
+    buildCommand: |
+      pip install -r requirements.txt
+      ALLOW_MODEL_DOWNLOAD=1 python scripts/preload_model.py
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: ALLOW_MODEL_DOWNLOAD
+        value: "0"
+      - key: MODEL_CACHE_DIR
+        value: ./models/hf_cache
