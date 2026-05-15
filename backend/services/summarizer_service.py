@@ -23,8 +23,15 @@ class SummarizerService:
         self._pipeline = None
         self._load_error: Optional[str] = None
 
+    def _is_extractive_only(self) -> bool:
+        return self.settings.summarizer_mode.strip().lower() == "extractive_only"
+
     def _load_pipeline(self) -> None:
         if self._pipeline is not None or self._load_error is not None:
+            return
+
+        if self._is_extractive_only():
+            self._load_error = "The service is configured to use extractive-only summarization."
             return
 
         try:
@@ -131,9 +138,25 @@ class SummarizerService:
 
     def summarize(self, text: str, summary_size: str, output_format: str) -> SummarizationResult:
         cleaned_text = clean_text(text)
+        sentence_limit_map = {
+            "short": 3,
+            "medium": 4,
+            "detailed": 5,
+        }
+        sentence_limit = sentence_limit_map.get(summary_size, 4)
+
+        if self._is_extractive_only():
+            extractive_summary = summarize_extractive(cleaned_text, sentence_limit=sentence_limit + 1)
+            return SummarizationResult(
+                summary=format_summary(extractive_summary, output_format),
+                engine_used="extractive:deployment-safe-mode",
+                warning=(
+                    "This deployment uses the extractive summarization mode to keep the hosted app stable on a "
+                    "free cloud instance."
+                ),
+            )
 
         if word_count(cleaned_text) < 120:
-            sentence_limit = 5 if summary_size == "detailed" else 4 if summary_size == "medium" else 3
             hybrid_summary = summarize_extractive(cleaned_text, sentence_limit=sentence_limit)
             return SummarizationResult(
                 summary=format_summary(hybrid_summary, output_format),
@@ -151,7 +174,7 @@ class SummarizerService:
                 warning=None,
             )
 
-        fallback = summarize_extractive(cleaned_text, sentence_limit=5 if summary_size == "detailed" else 4)
+        fallback = summarize_extractive(cleaned_text, sentence_limit=sentence_limit + 1)
         warning = (
             "Transformer model could not be loaded, so the app used a fallback extractive summary. "
             f"Reason: {self._load_error}"
