@@ -16,6 +16,9 @@ from backend.config import get_settings
 
 def main() -> None:
     settings = get_settings()
+    if settings.summarizer_mode.strip().lower() == "extractive_only":
+        print("Skipping model preload because SUMMARIZER_MODE=extractive_only.")
+        return
     settings.model_cache_dir.mkdir(parents=True, exist_ok=True)
     print(f"Downloading model: {settings.model_name}")
     AutoTokenizer.from_pretrained(settings.model_name, cache_dir=str(settings.model_cache_dir))
