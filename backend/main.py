@@ -74,12 +74,6 @@ async def summarize(
             detail="Please provide either text input or a valid PDF file.",
         )
 
-    if len(source_text) < 80:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Please provide a longer input so the summary can be meaningful.",
-        )
-
     if len(source_text) > settings.max_input_chars:
         source_text = source_text[: settings.max_input_chars]
         extracted_characters = len(source_text)
