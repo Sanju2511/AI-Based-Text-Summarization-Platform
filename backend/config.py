@@ -14,6 +14,7 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 class Settings:
     app_name: str = "AI-Based Text Summarization Platform"
     model_name: str = os.getenv("SUMMARIZER_MODEL_NAME", "sshleifer/distilbart-cnn-12-6")
+    summarizer_mode: str = os.getenv("SUMMARIZER_MODE", "auto")
     max_upload_mb: int = int(os.getenv("MAX_UPLOAD_MB", "8"))
     max_input_chars: int = int(os.getenv("MAX_INPUT_CHARS", "20000"))
     summary_min_length: int = int(os.getenv("SUMMARY_MIN_LENGTH", "60"))
